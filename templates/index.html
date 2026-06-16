@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BigQuery Release Notes Dashboard</title>
+  <meta name="description" content="A premium, real-time dashboard tracking Google Cloud BigQuery release notes and updates with instant sharing features.">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Vanilla CSS Stylesheet -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Section -->
+    <header class="dashboard-header">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-database animate-pulse"></i>
+        </div>
+        <div class="logo-text">
+          <h1>BigQuery</h1>
+          <span class="sub-title">Release Notes Tracker</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <div class="status-indicator">
+          <span class="status-dot green"></span>
+          <span id="status-text">Live Connection</span>
+        </div>
+        <button id="refresh-btn" class="btn btn-primary" title="Refresh Release Notes">
+          <i id="refresh-icon" class="fa-solid fa-arrows-rotate"></i>
+          <span>Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Stats summary section -->
+    <section class="stats-overview" id="stats-section">
+      <div class="stat-card" data-filter="all">
+        <div class="stat-icon all"><i class="fa-solid fa-list"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Total Updates</span>
+          <h2 id="stat-total" class="stat-value">-</h2>
+        </div>
+      </div>
+      <div class="stat-card" data-filter="feature">
+        <div class="stat-icon feature"><i class="fa-solid fa-circle-plus"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Features</span>
+          <h2 id="stat-features" class="stat-value">-</h2>
+        </div>
+      </div>
+      <div class="stat-card" data-filter="breaking">
+        <div class="stat-icon breaking"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Breaking</span>
+          <h2 id="stat-breaking" class="stat-value">-</h2>
+        </div>
+      </div>
+      <div class="stat-card" data-filter="issue">
+        <div class="stat-icon issue"><i class="fa-solid fa-bug"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Issues</span>
+          <h2 id="stat-issues" class="stat-value">-</h2>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Layout -->
+    <main class="dashboard-body">
+      <!-- Search & Filters Sidebar -->
+      <aside class="sidebar-controls">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="search-input" placeholder="Search release notes..." aria-label="Search release notes">
+        </div>
+
+        <div class="filter-group">
+          <h3>Filter by Type</h3>
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-type="all">
+              <i class="fa-solid fa-border-all"></i> All Updates
+            </button>
+            <button class="filter-btn" data-type="feature">
+              <span class="badge badge-feature"></span> Feature
+            </button>
+            <button class="filter-btn" data-type="change">
+              <span class="badge badge-change"></span> Change
+            </button>
+            <button class="filter-btn" data-type="breaking">
+              <span class="badge badge-breaking"></span> Breaking
+            </button>
+            <button class="filter-btn" data-type="issue">
+              <span class="badge badge-issue"></span> Issue
+            </button>
+            <button class="filter-btn" data-type="announcement">
+              <span class="badge badge-announcement"></span> Announcement
+            </button>
+          </div>
+        </div>
+
+        <div class="feed-info-box">
+          <h3><i class="fa-solid fa-circle-info"></i> Feed Source</h3>
+          <p>This application fetches the live Atom feed directly from Google Cloud's BigQuery documentation feed.</p>
+          <a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank" rel="noopener noreferrer" class="feed-link">
+            <span>View Original Feed XML</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Content Area -->
+      <section class="release-list-container">
+        <!-- Spinner Overlay -->
+        <div id="loading-spinner" class="loading-container">
+          <div class="spinner-glow"></div>
+          <div class="spinner"></div>
+          <p class="loading-text">Fetching latest release notes...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="error-container hidden">
+          <i class="fa-solid fa-circle-exclamation error-icon"></i>
+          <h2>Failed to load release notes</h2>
+          <p id="error-message">Unknown error occurred.</p>
+          <button id="retry-btn" class="btn btn-secondary">Retry Fetching</button>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-container hidden">
+          <i class="fa-solid fa-folder-open empty-icon"></i>
+          <h2>No updates found</h2>
+          <p>Try clearing your search or filters to see more results.</p>
+        </div>
+
+        <!-- Release Cards Feed -->
+        <div id="releases-feed" class="releases-feed"></div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+      <p>&copy; 2026 BigQuery Release Notes Dashboard. Built with Flask, HTML5, Vanilla CSS & JavaScript.</p>
+    </footer>
+  </div>
+
+  <!-- Twitter Compose Modal -->
+  <div id="tweet-modal" class="modal-overlay hidden" aria-modal="true" role="dialog">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2><i class="fa-brands fa-x-twitter"></i> Compose Update Post</h2>
+        <button id="close-modal-btn" class="close-btn" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="tweet-textarea">Preview and edit your post before sharing on X/Twitter:</label>
+        <textarea id="tweet-textarea" rows="6" maxlength="280"></textarea>
+        
+        <div class="modal-meta">
+          <div class="character-count">
+            <span id="char-current">0</span>/<span id="char-max">280</span>
+          </div>
+          <div id="char-warning" class="char-warning hidden">
+            <i class="fa-solid fa-triangle-exclamation"></i> Over the 280 character limit!
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-modal-btn" class="btn btn-ghost">Cancel</button>
+        <button id="share-tweet-btn" class="btn btn-twitter">
+          <i class="fa-brands fa-x-twitter"></i> Post to X (Twitter)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vanilla JS Frontend Logic -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
